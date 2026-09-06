@@ -1,10 +1,10 @@
 import time
 import pandas as pd
+import numpy as np
 import plotly.express as px
 import psycopg2
 import streamlit as st
 
-# Page Configuration
 st.set_page_config(
     page_title="Real-Time E-Commerce Fraud Detection",
     page_icon="🚨",
@@ -14,7 +14,6 @@ st.set_page_config(
 st.title("🚨 Real-Time E-Commerce Fraud Detection & CDC Dashboard")
 st.markdown("PostgreSQL -> Debezium CDC -> Kafka -> Flink -> Streamlit Pipeline")
 
-# Database Connection Function
 def get_db_connection():
     return psycopg2.connect(
         host="localhost",
@@ -24,7 +23,6 @@ def get_db_connection():
         password="postgrespassword"
     )
 
-# Data Fetching Function
 def fetch_transactions():
     conn = get_db_connection()
     query = """
@@ -37,27 +35,35 @@ def fetch_transactions():
     conn.close()
     return df
 
-# Live Metrics & Visualization Layout
+def generate_mock_data():
+    np.random.seed(42)
+    methods = ['CREDIT_CARD', 'DEBIT_CARD', 'PAYPAL', 'CRYPTO']
+    data = []
+    for i in range(100, 0, -1):
+        amount = np.random.choice([np.random.uniform(10, 500), np.random.uniform(5500, 15000)], p=[0.85, 0.15])
+        data.append({
+            "transaction_id": i,
+            "user_id": np.random.randint(100, 999),
+            "amount": round(amount, 2),
+            "payment_method": np.random.choice(methods),
+            "ip_address": "192.168.1.99",
+            "created_at": pd.Timestamp.now() - pd.Timedelta(seconds=i*3)
+        })
+    return pd.DataFrame(data)
+
 placeholder = st.empty()
-counter = 0  # Dynamic key generator counter
+counter = 0
 
 while True:
     counter += 1
+    is_mock = False
     
     try:
         df = fetch_transactions()
     except Exception:
-        with placeholder.container():
-            st.error("⚠️ Local Database Connection Required")
-            st.warning(
-                "This live demo requires the local streaming infrastructure (PostgreSQL CDC, Kafka, Flink) running on localhost. "
-                "Please clone the repository and run `docker compose up -d` for full operational functionality."
-            )
-            st.info("💡 See project README on GitHub for local setup instructions.")
-        time.sleep(10)
-        continue
+        df = generate_mock_data()
+        is_mock = True
 
-    # Fraud Analysis (Transactions above $5000)
     df['is_fraud'] = df['amount'] > 5000
     total_tx = len(df)
     total_amount = df['amount'].sum()
@@ -66,7 +72,9 @@ while True:
     fraud_amount = fraud_df['amount'].sum()
     
     with placeholder.container():
-        # KPI Metrics
+        if is_mock:
+            st.warning("⚠️ **Demo Mode Active**: Local database is disconnected. Showing simulated streaming data for UI demonstration.")
+        
         kpi1, kpi2, kpi3, kpi4 = st.columns(4)
         kpi1.metric(label="Total Transactions (Last 100)", value=total_tx)
         kpi2.metric(label="Total Volume", value=f"${total_amount:,.2f}")
