@@ -1,5 +1,9 @@
 # 🚨 Real-Time E-Commerce Fraud Detection & Streaming CDC Pipeline
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://real-time-ecommerce-fraud-detection.streamlit.app/)
+
+> **Note:** The live dashboard on Streamlit Cloud requires a running local infrastructure (PostgreSQL CDC & Kafka Pipeline). For full real-time streaming functionality, please follow the local setup instructions below.
+
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Apache Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?style=for-the-badge&logo=apache-kafka&logoColor=white)
 ![Apache Flink](https://img.shields.io/badge/Apache_Flink-E6526F?style=for-the-badge&logo=apache-flink&logoColor=white)
