@@ -1,3 +1,42 @@
+import time
+import pandas as pd
+import plotly.express as px
+import psycopg2
+import streamlit as st
+
+# Page Configuration
+st.set_page_config(
+    page_title="Real-Time E-Commerce Fraud Detection",
+    page_icon="🚨",
+    layout="wide"
+)
+
+st.title("🚨 Real-Time E-Commerce Fraud Detection & CDC Dashboard")
+st.markdown("PostgreSQL -> Debezium CDC -> Kafka -> Flink -> Streamlit Pipeline")
+
+# Database Connection Function
+def get_db_connection():
+    return psycopg2.connect(
+        host="localhost",
+        port="5432",
+        database="ecommerce_db",
+        user="postgres",
+        password="postgrespassword"
+    )
+
+# Data Fetching Function
+def fetch_transactions():
+    conn = get_db_connection()
+    query = """
+    SELECT transaction_id, user_id, amount, payment_method, ip_address, device_id, created_at
+    FROM transactions
+    ORDER BY created_at DESC
+    LIMIT 100;
+    """
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df
+
 # Live Metrics & Visualization Layout
 placeholder = st.empty()
 counter = 0  # Dynamic key generator counter
@@ -7,7 +46,7 @@ while True:
     
     try:
         df = fetch_transactions()
-    except Exception as e:
+    except Exception:
         with placeholder.container():
             st.error("⚠️ Local Database Connection Required")
             st.warning(
